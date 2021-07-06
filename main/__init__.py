@@ -1,18 +1,19 @@
-from typing import Optional, List
-from .model import *
-from .db import DataBase
+from typing import List, Optional
+
 from fastapi import FastAPI
+
+from .api import *
+from .db import DataBase
+from .model import *
 
 app = FastAPI()
 
 instance = DataBase()
 
 
-
-@app.post("/upload/")
-async def create_house_info_daily(item: HousePostFormat):
-    print(len(item.content))
-    return {'code': 0}
+app.on_event("startup")(startup_event)
+app.post("/upload/")(add_house)
+app.get('/dummyheatmap/')(dummy_heat_map)
 
 @app.get("/heatmap/")
 async def Heat_map(item: Heat_map):

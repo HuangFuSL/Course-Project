@@ -67,19 +67,18 @@ class Fixed(Base):
     living_room = Column(Integer)
     bathroom = Column(Integer)
     floor_no = Column(Integer)
-    first_date = Column(DateTime, server_default=func.now())
-    last_date = Column(DateTime)
 
     volatile = relationship('volatile_info')
 
     __mapper_args__ = {"eager_defaults": True}
 
 
-update_task_state = DDL('''\
-CREATE TRIGGER IF NOT EXISTS date_update AFTER INSERT
-    ON volatile_info
-    BEGIN
-        UPDATE fixed_info
-        SET last_date = new.date where beike_ID = new.beike_ID;
-    END;''')
-event.listen(Volatile.__table__, 'after_create', update_task_state)
+VOLATILE_FIELDS = ['beike_ID', 'date', 'title', 'price_per_square']
+FIXED_FIELDS = [
+    'beike_ID', 'city', 'construct_time', 'community_name', 'outer_square', 
+    'inner_square', 'structure', 'construction_type', 'direction', 
+    'construction_struct', 'decoration', 'elevator_ratio', 'heating',
+    'whether_elevator', 'listing_time', 'trade_property_right',
+    'last_trade_time', 'house_usage', 'property_right', 'mortgage_info', 
+    'bedroom', 'living_room', 'bathroom', 'floor_no',
+]
