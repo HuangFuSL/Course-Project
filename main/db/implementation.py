@@ -20,7 +20,7 @@ class DataBase():
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._need_create = not os.path.exists('database.db')
-            cls._engine = create_async_engine("sqlite+aiosqlite:///database.db")
+            cls._engine = create_async_engine("sqlite+aiosqlite:///data/database.db")
             cls.session = sessionmaker(cls._engine, class_=AsyncSession, expire_on_commit=False)
             cls._instance = super().__new__(DataBase)
         return cls._instance
@@ -49,3 +49,4 @@ class DataBase():
         async with self._engine.connect() as c:
             await c.execute(insert(Fixed, values=fixed).prefix_with("OR IGNORE"))
             await c.execute(insert(Volatile, values=volatile))
+            await c.commit()
