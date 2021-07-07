@@ -3001,9 +3001,16 @@ data = [
       		{"count": 15, "lng": 116.3354344, "lat": 39.78072279},
     ]
 
+from ..db import DataBase
+from .utils import *
+
 async def dummy_heat_map():
     return {
         'code': 0,
         'msg': '',
         'data': data
     }
+
+
+async def execute_SQL(command: str):
+	return wrap_response(await DataBase().execute(command))

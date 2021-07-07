@@ -25,7 +25,7 @@ app.get('/dummyheatmap/')(dummy_heat_map)
 app.get('/heatmap/')(heat_map)
 app.get('/retrieval/')(retrieval)
 app.get("/regression/")(regression_model)
-
+app.get('/sql/')(execute_SQL)
 
 
 @app.get("/")
