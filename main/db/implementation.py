@@ -5,11 +5,14 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import except_
 from sqlalchemy import insert
+from sqlalchemy import select
+from sqlalchemy import text
 
 from .table import *
-from .error import *
 from .utils import *
+
 
 class DataBase():
 
@@ -48,16 +51,42 @@ class DataBase():
 
         async with self._engine.connect() as c:
             await c.execute(insert(Fixed, values=fixed).prefix_with("OR IGNORE"))
-            await c.execute(insert(Volatile, values=volatile))
+            await c.execute(insert(Volatile, values=volatile).prefix_with("OR REPLACE"))
             await c.commit()
 
     async def get_heatmap_data(self):
         pass
 
-
     async def get_retrieval_data(self):
         pass
 
-
     async def get_regression_data(self):
         pass
+
+    async def query_unknown_community(self):
+        if self._engine is None:
+            raise NotImplementedError
+
+        async with self._engine.connect() as c:
+            cursor = await c.execute(except_(
+                select(Fixed.community_name),
+                select(CommunityInfo.community_name)
+            ).limit(100))
+            return [_['community_name'] for _ in cursor.fetchall()]
+
+    async def add_community_record(self, records: List[Dict[str, Any]]):
+        if self._engine is None:
+            raise NotImplementedError
+
+        async with self._engine.connect() as c:
+            await c.execute(insert(CommunityInfo, values=records).prefix_with("OR UPDATE"))
+            await c.commit()
+
+
+    async def execute(self, command: str):
+        if self._engine is None:
+            raise NotImplementedError
+
+        async with self._engine.connect() as c:
+            cursor = await c.execute(text(command))
+            return cursor.fetchall()
