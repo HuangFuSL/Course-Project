@@ -1,7 +1,8 @@
 from typing import Optional, List
 from pydantic import BaseModel
 
-class House_info_daily(BaseModel):
+
+class HouseRecord(BaseModel):
     title: str
     city: str
     price_per_square: int
@@ -21,7 +22,7 @@ class House_info_daily(BaseModel):
     heating: int
     whether_elevator: int
     listing_time: float
-    trade_property_right: int                                               
+    trade_property_right: int
     last_trade_time: float
     house_usage: int
     property_right: int
@@ -31,24 +32,38 @@ class House_info_daily(BaseModel):
     bathroom: int
     floor_no: int
 
-class HousePostFormat(BaseModel):
-    content: List[House_info_daily]
+
+class HouseRequest(BaseModel):
+    content: List[HouseRecord]
     count: int
 
 
-class Community_info(BaseModel):
+class SubwayRecord(BaseModel):
+    community_name: str
+    station_name: str
+    distance: int
+
+
+class CommunityRecord(BaseModel):
     city: str
     community_name: str
     num_on_sale: int
     district: str
     street: str
-    subway: Optional[str] = None #整数和字符串的分离
+    subway: Optional[List[SubwayRecord]] = None
     lng: float
     lat: float
 
+
+class CommunityRequest(BaseModel):
+    count: int
+    content: List[CommunityRecord]
+
+
 class Heat_map(BaseModel):
     city: float
-    
+
+
 class Retrieval(BaseModel):
     city: str
     area: str
@@ -65,10 +80,11 @@ class Retrieval(BaseModel):
     inner_square_max: Optional[float] = None
     elevator_ratio_min: float
     elevator_ratio_max: float
-    house_life_min: int #需要根据数据计算
-    house_life_max: int #需要根据数据计算
+    house_life_min: int
+    house_life_max: int
     property_right: int
     mortgage_info: int
 
+
 class Regression_model(BaseModel):
-    current_date: float #时间戳
+    current_date: float  # 时间戳
