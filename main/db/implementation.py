@@ -50,3 +50,14 @@ class DataBase():
             await c.execute(insert(Fixed, values=fixed).prefix_with("OR IGNORE"))
             await c.execute(insert(Volatile, values=volatile))
             await c.commit()
+
+    async def get_heatmap_data(self):
+        pass
+
+
+    async def get_retrieval_data(self):
+        pass
+
+
+    async def get_regression_data(self):
+        pass

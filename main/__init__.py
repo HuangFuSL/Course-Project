@@ -22,18 +22,10 @@ instance = DataBase()
 app.on_event("startup")(startup_event)
 app.post("/upload/")(add_house)
 app.get('/dummyheatmap/')(dummy_heat_map)
+app.get('/heatmap/')(heat_map)
+app.get('/retrieval/')(retrieval)
+app.get("/regression/")(regression_model)
 
-@app.get("/heatmap/")
-async def Heat_map(item: Heat_map):
-     return item
-
-@app.get("/retrieval/")
-async def Retrieval(item: Retrieval):
-     return item
-
-@app.get("/regression/")
-async def Regression_model(item: Regression_model):
-     return item
 
 
 @app.get("/")
