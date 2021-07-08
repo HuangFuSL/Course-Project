@@ -73,9 +73,9 @@ class CommunityInfo(Base):
     community_name = Column(Text, primary_key=True)
     city = Column(Text)
     num_on_sale = Column(Integer)
-    longitude = Column(Float)
-    latitude = Column(Float)
-    area = Column(Text)
+    lng = Column(Float)
+    lat = Column(Float)
+    district = Column(Text)
     street = Column(Text)
 
     fixed = relationship(Fixed)

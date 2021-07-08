@@ -39,7 +39,6 @@ class HouseRequest(BaseModel):
 
 
 class SubwayRecord(BaseModel):
-    community_name: str
     station_name: str
     distance: int
 
