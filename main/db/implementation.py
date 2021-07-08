@@ -31,6 +31,12 @@ class DataBase():
     def __init__(self):
         pass
 
+    @staticmethod
+    def get_today():
+        tz_info = datetime.timezone(datetime.timedelta(hours=8))
+        current = datetime.datetime.now()
+        return current.astimezone(tz_info).date()
+
     async def create_table(self):
         if self._engine is None:
             raise NotImplementedError
@@ -44,7 +50,7 @@ class DataBase():
             raise NotImplementedError
         fixed, volatile = split_records(records, FIXED_FIELDS, VOLATILE_FIELDS)
         for _ in volatile:
-            _['date'] = datetime.date.today()
+            _['date'] = self.get_today()
         for _ in fixed:
             _['listing_time'] = datetime.date.fromtimestamp(_['listing_time'])
             _['last_trade_time'] = datetime.date.fromtimestamp(_['last_trade_time'])
