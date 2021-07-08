@@ -1,5 +1,5 @@
 from ..db import DataBase
-from ..model import *
+from .model import *
 from .utils import *
 
 

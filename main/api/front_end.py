@@ -1,5 +1,5 @@
 from ..db import DataBase
-from ..model import *
+from .model import *
 
 async def heat_map():
     data = await DataBase().get_heatmap_data()

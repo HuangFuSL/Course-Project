@@ -4,7 +4,6 @@ from fastapi import FastAPI
 
 from .api import *
 from .db import DataBase
-from .model import *
 
 app = FastAPI()
 
