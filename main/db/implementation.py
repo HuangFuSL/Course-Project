@@ -63,25 +63,39 @@ class DataBase():
     async def get_regression_data(self):
         pass
 
-    async def query_unknown_community(self):
+    async def query_cities(self):
+        if self._engine is None:
+            raise NotImplementedError
+
+        async with self._engine.connect() as c:
+            cursor = await c.execute(select(Fixed.city).group_by(Fixed.city))
+            return [_['city'] for _ in cursor.fetchall()]
+
+    async def query_unknown_community(self, city: str):
         if self._engine is None:
             raise NotImplementedError
 
         async with self._engine.connect() as c:
             cursor = await c.execute(except_(
-                select(Fixed.community_name),
+                select(Fixed.community_name).where(Fixed.city == city),
                 select(CommunityInfo.community_name)
-            ).limit(100))
+            ).limit(20))
             return [_['community_name'] for _ in cursor.fetchall()]
 
     async def add_community_record(self, records: List[Dict[str, Any]]):
         if self._engine is None:
             raise NotImplementedError
 
-        async with self._engine.connect() as c:
-            await c.execute(insert(CommunityInfo, values=records).prefix_with("OR UPDATE"))
-            await c.commit()
+        for _ in records:
+            _['subway'] = [i.__dict__ for i in _['subway']]
+            _['subway'] = add_field(_['subway'], {'community_name': _['community_name']})
+        subway, other = extract_field(records, 'subway')
+        subway = flatten(subway)
 
+        async with self._engine.connect() as c:
+            await c.execute(insert(CommunityInfo, values=other).prefix_with("OR IGNORE"))
+            await c.execute(insert(SubwayInfo, values=subway).prefix_with("OR IGNORE"))
+            await c.commit()
 
     async def execute(self, command: str):
         if self._engine is None:

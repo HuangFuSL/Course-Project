@@ -8,8 +8,12 @@ async def add_house(item: HouseRequest):
     return wrap_response(len(item.content))
 
 
-async def query_community():
-    resp = await DataBase().query_unknown_community()
+async def query_cities():
+    resp = await DataBase().query_cities()
+    return wrap_response(resp)
+
+async def query_community(city: str):
+    resp = await DataBase().query_unknown_community(city)
     return wrap_response(resp)
 
 
