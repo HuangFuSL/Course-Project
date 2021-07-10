@@ -64,25 +64,25 @@ class Heat_map(BaseModel):
 
 
 class Retrieval(BaseModel):
-    city: str
-    area: str
-    street: str
-    bedroom_min: int
-    bedroom_max: int
-    living_room_min: int
-    living_room_max: int
-    bathroom_min: int
-    bathroom_max: int
-    outer_square_min: float
-    outer_square_max: float
+    city: Optional[str] = None
+    area: Optional[str] = None
+    street: Optional[str] = None
+    bedroom_min: Optional[int] = None
+    bedroom_max: Optional[int] = None
+    living_room_min: Optional[int] = None
+    living_room_max: Optional[int] = None
+    bathroom_min: Optional[int] = None
+    bathroom_max: Optional[int] = None
+    outer_square_min: Optional[float] = None
+    outer_square_max: Optional[float] = None
     inner_square_min: Optional[float] = None
     inner_square_max: Optional[float] = None
-    elevator_ratio_min: float
-    elevator_ratio_max: float
-    house_life_min: int
-    house_life_max: int
-    property_right: int
-    mortgage_info: int
+    elevator_ratio_min: Optional[float] = None
+    elevator_ratio_max: Optional[float] = None
+    house_life_min: Optional[int] = None
+    house_life_max: Optional[int] = None
+    property_right: Optional[int] = None
+    mortgage_info: Optional[int] = None
 
 
 class Regression_model(BaseModel):

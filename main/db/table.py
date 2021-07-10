@@ -90,11 +90,11 @@ class CommunityInfo(Base):
 
 VOLATILE_FIELDS = ['beike_ID', 'date', 'title', 'price_per_square']
 FIXED_FIELDS = [
-    'beike_ID', 'city', 'construct_time', 'community_name', 'outer_square', 
-    'inner_square', 'structure', 'construction_type', 'direction', 
+    'beike_ID', 'city', 'construct_time', 'community_name', 'outer_square',
+    'inner_square', 'structure', 'construction_type', 'direction',
     'construction_struct', 'decoration', 'elevator_ratio', 'heating',
     'whether_elevator', 'listing_time', 'trade_property_right',
-    'last_trade_time', 'house_usage', 'property_right', 'mortgage_info', 
+    'last_trade_time', 'house_usage', 'property_right', 'mortgage_info',
     'bedroom', 'living_room', 'bathroom', 'floor_no',
 ]
 COMMUNITY_FIELDS = ['city', 'community_name', 'district', 'street', 'lng', 'lat']
