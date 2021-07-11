@@ -66,7 +66,7 @@ class DataBase():
             raise NotImplementedError
         async with self._engine.connect() as c:
             cursor = await c.execute(select(
-                CommunityInfo.num_on_sale,
+                (CommunityInfo.num_on_sale).label("count"),
                 CommunityInfo.lng,
                 CommunityInfo.lat
             ))
@@ -77,7 +77,7 @@ class DataBase():
             raise NotImplementedError
         async with self._engine.connect() as c:
             cursor = await c.execute(select(
-                functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID),
+                (functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID)).label("count"),
                 CommunityInfo.lng,
                 CommunityInfo.lat
             ).where(and_(
