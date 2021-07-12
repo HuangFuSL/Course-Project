@@ -249,4 +249,7 @@ class DataBase():
 
         async with self._engine.connect() as c:
             cursor = await c.execute(text(command))
-            return cursor.fetchall()
+            try:
+                return cursor.fetchall()
+            except:
+                cursor.commit()
