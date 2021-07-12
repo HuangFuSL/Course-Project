@@ -252,4 +252,4 @@ class DataBase():
             try:
                 return cursor.fetchall()
             except:
-                cursor.commit()
+                await c.commit()
