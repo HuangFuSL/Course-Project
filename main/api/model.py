@@ -63,26 +63,35 @@ class Heat_map(BaseModel):
     city: float
 
 
+class LocationRange(BaseModel):
+    lng: float
+    lat: float
+    dist: int
+
 class Retrieval(BaseModel):
-    city: Optional[str] = None
-    area: Optional[str] = None
-    street: Optional[str] = None
-    bedroom_min: Optional[int] = None
-    bedroom_max: Optional[int] = None
-    living_room_min: Optional[int] = None
-    living_room_max: Optional[int] = None
-    bathroom_min: Optional[int] = None
-    bathroom_max: Optional[int] = None
-    outer_square_min: Optional[float] = None
-    outer_square_max: Optional[float] = None
-    inner_square_min: Optional[float] = None
-    inner_square_max: Optional[float] = None
-    elevator_ratio_min: Optional[float] = None
-    elevator_ratio_max: Optional[float] = None
-    house_life_min: Optional[int] = None
-    house_life_max: Optional[int] = None
-    property_right: Optional[int] = None
-    mortgage_info: Optional[int] = None
+    city: Optional[str] = None                  # 城市
+    area: Optional[str] = None                  # 区划
+    bedroom_min: Optional[int] = None           # 室数最小值
+    bedroom_max: Optional[int] = None           # 室数最大值
+    living_room_min: Optional[int] = None       # 厅数最小值
+    living_room_max: Optional[int] = None       # 厅数最大值
+    bathroom_min: Optional[int] = None          # 卫数最小值
+    bathroom_max: Optional[int] = None          # 卫数最大值
+    floor: Optional[int] = None                 # 楼层
+    house_life_min: Optional[int] = None        # 楼龄最小值
+    house_life_max: Optional[int] = None        # 楼龄最大值
+    last_trade_time: Optional[int] = None       # 交易年限
+    outer_square_min: Optional[float] = None    # 面积最小值
+    outer_square_max: Optional[float] = None    # 面积最大值
+    decoration: Optional[int] = None            # 装修情况
+
+    location: Optional[LocationRange] = None    # 位置
+
+
+class Request(BaseModel):
+    criteria: Retrieval
+    offset: int = 0
+    limit: int = 20
 
 
 class Regression_model(BaseModel):

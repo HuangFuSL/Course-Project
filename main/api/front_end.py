@@ -1,4 +1,4 @@
-from ..db import DataBase
+from ..db import *
 from .model import *
 
 async def heat_map_1():
@@ -29,9 +29,17 @@ async def heat_map_2():
         'data': data
     }
 
-async def retrieval(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_retrieval_data(retrieval_dict)
+def parse_retrieval_arg(item: Retrieval):
+    ret = vars(item)
+    if ret['location'] is not None:
+        ret['location'] = vars(ret['location'])
+    return ret
+
+async def retrieval(item: Request):
+    offset, limit = item.offset, item.limit
+    data = await DataBase().get_retrieval_data(
+        offset, limit, parse_retrieval_arg(item.criteria)
+    )
     """
     传入参数见model.py
     返回的样例数据（只取前20条）
@@ -56,8 +64,11 @@ async def retrieval(item: Retrieval):
     }
 
 async def graph_1(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_1_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        Volatile.date,
+        'avg', 'price',
+        **parse_retrieval_arg(item)
+    )
     """
     均价-时间走势图
     返回的样例数据
@@ -71,8 +82,11 @@ async def graph_1(item: Retrieval):
     }
 
 async def graph_2(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_2_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        Fixed.city,
+        'count', 'count',
+        **parse_retrieval_arg(item)
+    )
     """
     数量-城市分布图
     返回的样例数据
@@ -89,8 +103,11 @@ async def graph_2(item: Retrieval):
     }
 
 async def graph_3(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_3_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        Fixed.city,
+        'avg', 'price',
+        **parse_retrieval_arg(item)
+    )
     """
     均价-城市分布图
     返回的样例数据
@@ -108,8 +125,11 @@ async def graph_3(item: Retrieval):
 
 
 async def graph_4(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_4_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        CommunityInfo.district,
+        'count', 'count',
+        **parse_retrieval_arg(item)
+    )
     """
     数量-区划分布图
     返回的样例数据
@@ -126,8 +146,11 @@ async def graph_4(item: Retrieval):
     }
 
 async def graph_5(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_5_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        CommunityInfo.district,
+        'avg', 'price',
+        **parse_retrieval_arg(item)
+    )
     """
     均价-区划分布图
     返回的样例数据
@@ -144,8 +167,11 @@ async def graph_5(item: Retrieval):
     }
 
 async def graph_6(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_6_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        SubwayInfo.distance,
+        'count', 'count',
+        **parse_retrieval_arg(item)
+    )
     """
     房屋数量-地铁距离分布图
     返回的样例数据
@@ -163,8 +189,11 @@ async def graph_6(item: Retrieval):
     }
 
 async def graph_7(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_7_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        SubwayInfo.distance,
+        'avg', 'price',
+        **parse_retrieval_arg(item)
+    )
     """
     房屋均价-地铁距离分布图
     返回的样例数据
@@ -182,8 +211,11 @@ async def graph_7(item: Retrieval):
     }
 
 async def graph_8(item: Retrieval):
-    retrieval_dict = vars(item)
-    ddata = await DataBase().get_graph_8_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        Fixed.construct_time,
+        'count', 'count',
+        **parse_retrieval_arg(item)
+    )
     """
     房屋数量-楼龄分布图
     返回的样例数据
@@ -200,8 +232,11 @@ async def graph_8(item: Retrieval):
     }
 
 async def graph_9(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_9_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        Fixed.construct_time,
+        'avg', 'price',
+        **parse_retrieval_arg(item)
+    )
     """
     房屋均价-楼龄分布图
     返回的样例数据
@@ -218,8 +253,11 @@ async def graph_9(item: Retrieval):
     }
 
 async def graph_10(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_10_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        Fixed.outer_square,
+        'count', 'count',
+        **parse_retrieval_arg(item)
+    )
     """
     房屋数量-面积分布图
     返回的样例数据
@@ -236,8 +274,11 @@ async def graph_10(item: Retrieval):
     }
 
 async def graph_11(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_11_data(retrieval_dict)
+    data = await DataBase().get_graph_data(
+        Fixed.outer_square,
+        'avg', 'price',
+        **parse_retrieval_arg(item)
+    )
     """
     房屋均价-面积分布图
     返回的样例数据
@@ -254,8 +295,7 @@ async def graph_11(item: Retrieval):
     }
 
 async def graph_12(item: Retrieval):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_graph_12_data(retrieval_dict)
+    data = await DataBase().get_distribution(parse_retrieval_arg(item))
     """
     房屋地理分布图
     返回的样例数据

@@ -1,5 +1,4 @@
 import os
-import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -7,10 +6,11 @@ from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import and_
 from sqlalchemy import except_
+from sqlalchemy import func
 from sqlalchemy import insert
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import text
-from sqlalchemy.sql import functions
 
 from .table import *
 from .utils import *
@@ -32,11 +32,6 @@ class DataBase():
     def __init__(self):
         pass
 
-    @staticmethod
-    def get_today():
-        tz_info = datetime.timezone(datetime.timedelta(hours=8))
-        current = datetime.datetime.now()
-        return current.astimezone(tz_info).date()
 
     async def create_table(self):
         if self._engine is None:
@@ -51,7 +46,7 @@ class DataBase():
             raise NotImplementedError
         fixed, volatile = split_records(records, FIXED_FIELDS, VOLATILE_FIELDS)
         for _ in volatile:
-            _['date'] = self.get_today()
+            _['date'] = get_today()
         for _ in fixed:
             _['listing_time'] = datetime.date.fromtimestamp(_['listing_time'])
             _['last_trade_time'] = datetime.date.fromtimestamp(_['last_trade_time'])
@@ -65,32 +60,100 @@ class DataBase():
         if self._engine is None:
             raise NotImplementedError
         async with self._engine.connect() as c:
-            cursor = await c.execute(select(
+            cursor = await c.execute(select([
                 (CommunityInfo.num_on_sale).label("count"),
                 CommunityInfo.lng,
                 CommunityInfo.lat
-            ))
+            ]))
             return cursor.fetchall()
 
     async def get_heatmap_data_2(self):
         if self._engine is None:
             raise NotImplementedError
         async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                (functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID)).label("count"),
+            cursor = await c.execute(select([
+                (func.sum(Volatile.price_per_square) /
+                 func.count(Volatile.beike_ID)).label("count"),
                 CommunityInfo.lng,
                 CommunityInfo.lat
-            ).where(and_(
+            ]).where(and_(
                 Volatile.beike_ID == Fixed.beike_ID,
                 Fixed.community_name == CommunityInfo.community_name
             )).group_by(CommunityInfo.lng, CommunityInfo.lat))
             return cursor.fetchall()
 
-    async def get_retrieval_data(self, retrieval_dict: Dict[str, Any]):  # 一次只给20条数据
+    def build_criteria(self, criteria: Dict[str, Any]):
+        ret = []
+        candidate = {
+            'city': lambda _: Fixed.city == _['city'],
+            'area': lambda _: CommunityInfo.district == _['area'],
+            'bedroom_min': lambda _: Fixed.bedroom >= _['bedroom_min'],
+            'bedroom_max': lambda _: Fixed.bedroom <= _['bedroom_max'],
+            'living_room_min': lambda _: Fixed.living_room >= _['living_room_min'],
+            'living_room_max': lambda _: Fixed.living_room <= criteria['living_room_max'],
+            'bathroom_min': lambda _: Fixed.bathroom >= _['bathroom_min'],
+            'bathroom_max': lambda _: Fixed.bathroom <= _['bathroom_max'],
+            'floor': lambda _: Fixed.property_right == _['floor'],
+            'house_life_min': lambda _: Fixed.construct_time >= _['house_life_min'],
+            'house_life_max': lambda _: Fixed.construct_time <= _['house_life_max'],
+            'outer_square_min': lambda _: Fixed.outer_square >= _['outer_square_min'],
+            'outer_square_max': lambda _: Fixed.outer_square <= _['outer_square_max'],
+            'decoration': lambda _: Fixed.property_right == _['decoration'],
+        }
+
+        if criteria['location'] is not None:
+            lat1, lat2 = calc_lat_range(**criteria['location'])
+            lng1, lng2 = calc_lng_range(**criteria['location'])
+
+            if lng1 < lng2:
+                lng = and_(
+                    CommunityInfo.lng >= lng1,
+                    CommunityInfo.lng <= lng2
+                )
+            else:
+                lng = or_(
+                    CommunityInfo.lng >= lng1,
+                    CommunityInfo.lng <= lng2
+                )
+
+            ret.extend([
+                CommunityInfo.lat >= lat1,
+                CommunityInfo.lat <= lat2,
+                lng
+            ])
+
+        if criteria['last_trade_time']:
+            trade_time_candidate = {
+                # '满五年': 0,
+                # '满两年': 1,
+                # '未满两年': 2,
+                0: Fixed.last_trade_time <= get_years_ago(5),
+                1: and_(
+                    Fixed.last_trade_time > get_years_ago(5),
+                    Fixed.last_trade_time <= get_years_ago(2),
+                ),
+                2: Fixed.last_trade_time > get_years_ago(2),
+            }
+            ret.append(trade_time_candidate[criteria['last_trade_time']])
+
+        ret.extend(v(criteria) for k, v in candidate.items() if criteria[k] is not None)
+        ret.extend([
+            Fixed.beike_ID == Volatile.beike_ID,
+            CommunityInfo.community_name == Fixed.community_name,
+            SubwayInfo.community_name == Fixed.community_name,
+        ])
+
+        return and_(*ret)
+
+    # 一次只给20条数据
+    async def get_retrieval_data(self,
+        offset: int, limit: int, 
+        retrieval_dict: Dict[str, Any]
+    ):
         if self._engine is None:
             raise NotImplementedError
         async with self._engine.connect() as c:
-            cursor = await c.execute(select(
+            cursor = await c.execute(select([
                 Fixed.beike_ID,
                 Volatile.title,
                 Volatile.price_per_square * Fixed.outer_square,
@@ -104,380 +167,46 @@ class DataBase():
                 Fixed.listing_time,
                 Fixed.last_trade_time,
                 Fixed.decoration
-            ).where(and_(
-                Fixed.beike_ID == Volatile.beike_ID,
-                CommunityInfo.community_name == Fixed.community_name,
-                SubwayInfo.community_name == Fixed.community_name,
-                Fixed.city == retrieval_dict['city'],
-                CommunityInfo.district == retrieval_dict['area'],
-                CommunityInfo.street == retrieval_dict['street'],
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'],
-                Fixed.property_right == retrieval_dict['property_right'],
-                Fixed.mortgage_info == retrieval_dict['mortgage_info']
-            )))
+            ]).where(self.build_criteria(retrieval_dict)).offset(offset).limit(limit))
             return cursor.fetchall()
 
     async def get_regression_data(self):
         pass
 
-    async def get_graph_1_data(self, retrieval_dict: Dict[str, Any]):
+    async def get_graph_data(self,
+        grouper,
+        aggregator: str,
+        aggregator_label: str,
+        **criteria: Any
+    ):
         if self._engine is None:
             raise NotImplementedError
+
+        if aggregator == 'avg':
+            aggregate_val = func.sum(Volatile.price_per_square) / \
+                func.count(Volatile.price_per_square)
+        elif aggregator == 'count':
+            aggregate_val = func.count(grouper)
+        else:
+            raise ValueError("Aggregator should be 'avg' or 'count'.")
+        
         async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                Volatile.date,
-                Volatile.price_per_square
-            ).where(and_(
-                Fixed.beike_ID == Volatile.beike_ID,
-                CommunityInfo.community_name == Fixed.community_name,
-                SubwayInfo.community_name == Fixed.community_name,
-                Fixed.city == retrieval_dict['city'],
-                CommunityInfo.district == retrieval_dict['area'],
-                CommunityInfo.street == retrieval_dict['street'],
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'],
-                Fixed.property_right == retrieval_dict['property_right'],
-                Fixed.mortgage_info == retrieval_dict['mortgage_info']
-            )))
+            cursor = await c.execute(
+                select([grouper, aggregate_val.label(aggregator_label)]).
+                where(self.build_criteria(criteria)). \
+                group_by(grouper)
+            )
             return cursor.fetchall()
 
-    async def get_graph_2_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.count(Fixed.beike_ID),
-                Fixed.city
-            ).where(and_(
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(Fixed.city
-            ))
-            return cursor.fetchall()
 
-    async def get_graph_3_data(self, retrieval_dict: Dict[str, Any]):
+    async def get_distribution(self, retrieval_dict: Dict[str, Any]):
         if self._engine is None:
             raise NotImplementedError
         async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID),
-                Fixed.city
-            ).where(and_(
-                Fixed.beike_ID == Volatile.beike_ID,
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(Fixed.city
-            ))
-            return cursor.fetchall()
-
-    async def get_graph_4_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.count(Fixed.beike_ID),
-                CommunityInfo.district
-            ).where(and_(
-                Fixed.community_name == CommunityInfo.community_name,
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(CommunityInfo.district
-            ))
-            return cursor.fetchall()
-
-    async def get_graph_5_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID),
-                CommunityInfo.district
-            ).where(and_(
-                Fixed.beike_ID == Volatile.beike_ID,
-                Fixed.community_name == CommunityInfo.community_name,
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(CommunityInfo.district
-            ))
-            return cursor.fetchall()
-
-    async def get_graph_6_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.count(Fixed.beike_ID),
-                SubwayInfo.distance
-            ).where(and_(
-                Fixed.community_name == SubwayInfo.community_name,
-                Fixed.city == retrieval_dict['city'],
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'],
-                Fixed.property_right == retrieval_dict['property_right'],
-                Fixed.mortgage_info == retrieval_dict['mortgage_info']
-            )).group_by(SubwayInfo.distance))
-            return cursor.fetchall()
-
-    async def get_graph_7_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID),
-                SubwayInfo.distance
-            ).where(and_(
-                Fixed.community_name == SubwayInfo.community_name,
-                Fixed.beike_ID == Volatile.beike_ID,
-                Fixed.city == retrieval_dict['city'],
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'],
-                Fixed.property_right == retrieval_dict['property_right'],
-                Fixed.mortgage_info == retrieval_dict['mortgage_info']
-            )).group_by(SubwayInfo.distance))
-            return cursor.fetchall()
-
-    async def get_graph_8_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.count(Fixed.beike_ID),
-                Fixed.construct_time
-            ).where(and_(
-                Fixed.city == retrieval_dict['city'],
-                CommunityInfo.district == retrieval_dict['area'],
-                CommunityInfo.street == retrieval_dict['street'],
-                Fixed.community_name == CommunityInfo.community_name,
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(Fixed.construct_time))
-            return cursor.fetchall()
-
-    async def get_graph_9_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID),
-                Fixed.construct_time
-            ).where(and_(
-                Fixed.city == retrieval_dict['city'],
-                CommunityInfo.district == retrieval_dict['area'],
-                CommunityInfo.street == retrieval_dict['street'],
-                Fixed.community_name == CommunityInfo.community_name,
-                Fixed.beike_ID == Volatile.beike_ID,
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(Fixed.construct_time))
-            return cursor.fetchall()
-
-    async def get_graph_10_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.count(Fixed.beike_ID),
-                Fixed.outer_square
-            ).where(and_(
-                Fixed.city == retrieval_dict['city'],
-                CommunityInfo.district == retrieval_dict['area'],
-                CommunityInfo.street == retrieval_dict['street'],
-                Fixed.community_name == CommunityInfo.community_name,
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(Fixed.outer_square))
-            return cursor.fetchall()
-
-    async def get_graph_11_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
-                functions.sum(Volatile.price_per_square) / functions.count(Volatile.beike_ID),
-                Fixed.outer_square
-            ).where(and_(
-                Fixed.city == retrieval_dict['city'],
-                CommunityInfo.district == retrieval_dict['area'],
-                CommunityInfo.street == retrieval_dict['street'],
-                Fixed.community_name == CommunityInfo.community_name,
-                Fixed.beike_ID == Volatile.beike_ID,
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'])
-            ).group_by(Fixed.outer_square))
-            return cursor.fetchall()
-
-    async def get_graph_12_data(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select(
+            cursor = await c.execute(select([
                 CommunityInfo.lng,
                 CommunityInfo.lat
-            ).where(and_(
-                CommunityInfo.community_name == Fixed.community_name,
-                Fixed.city == retrieval_dict['city'],
-                Fixed.bedroom >= retrieval_dict['bedroom_min'],
-                Fixed.bedroom <= retrieval_dict['bedroom_max'],
-                Fixed.living_room >= retrieval_dict['living_room_min'],
-                Fixed.living_room <= retrieval_dict['living_room_max'],
-                Fixed.bathroom >= retrieval_dict['bathroom_min'],
-                Fixed.bathroom <= retrieval_dict['bathroom_max'],
-                Fixed.outer_square >= retrieval_dict['outer_square_min'],
-                Fixed.outer_square <= retrieval_dict['outer_square_max'],
-                Fixed.inner_square >= retrieval_dict['inner_square_min'],
-                Fixed.inner_square <= retrieval_dict['inner_square_max'],
-                Fixed.elevator_ratio >= retrieval_dict['elevator_ratio_min'],
-                Fixed.elevator_ratio <= retrieval_dict['elevator_ratio_max'],
-                Fixed.construct_time >= retrieval_dict['house_life_min'],
-                Fixed.construct_time <= retrieval_dict['house_life_max'],
-                Fixed.property_right == retrieval_dict['property_right'],
-                Fixed.mortgage_info == retrieval_dict['mortgage_info']
-            )))
+            ]).where(self.build_criteria(retrieval_dict)))
             return cursor.fetchall()
 
     async def query_cities(self):
@@ -485,7 +214,7 @@ class DataBase():
             raise NotImplementedError
 
         async with self._engine.connect() as c:
-            cursor = await c.execute(select(Fixed.city).group_by(Fixed.city))
+            cursor = await c.execute(select([Fixed.city]).group_by(Fixed.city))
             return [_['city'] for _ in cursor.fetchall()]
 
     async def query_unknown_community(self, city: str):
@@ -494,8 +223,8 @@ class DataBase():
 
         async with self._engine.connect() as c:
             cursor = await c.execute(except_(
-                select(Fixed.community_name).where(Fixed.city == city),
-                select(CommunityInfo.community_name)
+                select([Fixed.community_name]).where(Fixed.city == city),
+                select([CommunityInfo.community_name])
             ).limit(20))
             return [_['community_name'] for _ in cursor.fetchall()]
 
