@@ -20,7 +20,6 @@ instance = DataBase()
 
 app.on_event("startup")(startup_event)
 app.post("/upload/")(add_house)
-app.get('/dummyheatmap/')(dummy_heat_map)
 app.get('/uploadcommunity/')(query_community)
 app.get('/querycity/')(query_cities)
 app.post('/uploadcommunity/')(add_community)
