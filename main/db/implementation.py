@@ -93,7 +93,7 @@ class DataBase():
             'living_room_max': lambda _: Fixed.living_room <= criteria['living_room_max'],
             'bathroom_min': lambda _: Fixed.bathroom >= _['bathroom_min'],
             'bathroom_max': lambda _: Fixed.bathroom <= _['bathroom_max'],
-            'floor': lambda _: Fixed.property_right == _['floor'],
+            'floor': lambda _: Fixed.floor_no == _['floor'],
             'house_life_min': lambda _: Fixed.construct_time >= _['house_life_min'],
             'house_life_max': lambda _: Fixed.construct_time <= _['house_life_max'],
             'outer_square_min': lambda _: Fixed.outer_square >= _['outer_square_min'],
@@ -123,18 +123,28 @@ class DataBase():
             ])
 
         if criteria['last_trade_time']:
-            trade_time_candidate = {
+            trade_time_candidate = [
                 # '满五年': 0,
                 # '满两年': 1,
                 # '未满两年': 2,
-                0: Fixed.last_trade_time <= get_years_ago(5),
-                1: and_(
+                Fixed.last_trade_time <= get_years_ago(5),
+                and_(
                     Fixed.last_trade_time > get_years_ago(5),
                     Fixed.last_trade_time <= get_years_ago(2),
                 ),
-                2: Fixed.last_trade_time > get_years_ago(2),
-            }
+                Fixed.last_trade_time > get_years_ago(2),
+            ]
             ret.append(trade_time_candidate[criteria['last_trade_time']])
+        
+        if criteria['construct_time'] is not None:
+            construct_time_candidate = [
+                and_(
+                    Fixed.construct_time <= get_years_ago(_).year,
+                    Fixed.construct_time > get_years_ago(_ + 5).year
+                )
+                for _ in range(5)
+            ]
+            ret.extend(construct_time_candidate[criteria['construct_time']])
 
         ret.extend(v(criteria) for k, v in candidate.items() if criteria[k] is not None)
         ret.extend([
