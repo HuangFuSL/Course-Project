@@ -81,6 +81,7 @@ class Retrieval(BaseModel):
     house_life_min: Optional[int] = None        # 楼龄最小值
     house_life_max: Optional[int] = None        # 楼龄最大值
     last_trade_time: Optional[int] = None       # 交易年限
+    construct_time: Optional[int] = None        # 建造时间
     outer_square_min: Optional[float] = None    # 面积最小值
     outer_square_max: Optional[float] = None    # 面积最大值
     decoration: Optional[int] = None            # 装修情况
