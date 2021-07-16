@@ -130,3 +130,7 @@ dmypy.json
 
 # SQLite database
 *.db
+
+# nginx logs
+logs/
+temp/
