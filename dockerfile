@@ -10,6 +10,8 @@ RUN apk add --no-cache --virtual .build gcc g++ libgcc musl-dev make \
     && apk add sqlite nginx \
     && apk del .build gcc g++ libgcc musl-dev make
 
+RUN chmod 777 run.sh
+
 VOLUME ["/root/data"]
 
 EXPOSE 8000
