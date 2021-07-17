@@ -102,6 +102,8 @@ function query(offset, limit) {
                 var row = '<tr onclick="window.open(\'' + houseURL + '\');"><td>' + title + '</td><td>' + Math.floor(totalPrice) + '</td><td>' + unitPrice + '</td><td>' + distance + '</td><td>' + layout + '</td><td>' + floor + '</td><td>' + '</td><td>' + '</td><td>' + square + '</td><td>' + decoration + '</td></tr>';
 
                 document.getElementById('tbMain').innerHTML += row;
+                document.getElementById('tbMain').hidden = false;
+                document.getElementById('btPane').hidden = false;
             }
         },
         fail: function (err) {
