@@ -1,0 +1,341 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Filter</title>
+    <style>
+        body {
+            background-image: url(img/素材库/background.png);
+            background-attachment: scroll;
+            background-repeat: no-repeat;
+            background-position: bottom;
+            background-size: contain;
+        }
+    </style>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="http://api.map.baidu.com/api?type=webgl&v=1.0&ak=PlhFWpA02aoURjAOpnWcRGqw7AI8EEyO"></script>
+
+    <script src="/static/filter.js"></script>
+</head>
+
+<body style="background-color:#F5F5F5;">
+    <div class="jumbotron jumbotron-fluid" style="background-color: #51517f;">
+        <div class="container">
+            <h1 style="color: #F5F5F5; font-size: 31px"><a href="HomePage.html"><img src="img/素材库/home-transparent.png"
+                        width="50" height="45.8" alt=""></a> 房地产信息统计系统&nbsp;</h1>
+
+            <h2 style="color: #F5F5F5; font-size: 24px">
+                数据筛选分析
+            </h2>
+        </div>
+    </div>
+    <form id="filter" name="数据筛选">
+        <table clalss="table" style="font-size:23px;" width="95%" border="0" height="530" align="center">
+            <caption class="text-left">请选择筛选条件</caption>
+            <thead>
+                <tr style="color:#525d78">
+                    <th width="12%">属性</th>
+                    <th width="25%">筛选条件</th>
+                    <th colspan="6">地图选点</th>
+                </tr>
+            </thead>
+
+            <tbody style="font-family:Sans-Regular;color:#64648f;font-size:18px;">
+
+                <tr>
+                    <td>城市</td>
+                    <td><select name="city" id="city" onChange="changeCity()">
+                            <option value="" selected="selected"></option>
+                            <option value="北京">北京</option>
+                            <option value="上海">上海</option>
+                            <option value="广州">广州</option>
+                            <option value="深圳">深圳</option>
+                        </select>
+                        <script>
+                            function changeCity() {
+                                if (document.getElementById("city").selectedIndex == '0') {
+                                    self.location.href = "Filter.html";
+                                } else if (document.getElementById("city").selectedIndex == '1') {
+                                    self.location.href = "Filter_BJ.html";
+                                } else if (document.getElementById("city").selectedIndex == '2') {
+                                    self.location.href = "Filter_SH.html";
+                                } else if (document.getElementById("city").selectedIndex == '3') {
+                                    self.location.href = "Filter_GZ.html";
+                                } else if (document.getElementById("city").selectedIndex == '4') {
+                                    self.location.href = "Filter_SZ.html";
+                                }
+                            }
+                        </script>
+                    </td>
+                    <td colspan="6" rowspan="9">
+                        <div id="allMap" style="width: 100%;height: 95%"></div>
+                        &nbsp;
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>区划</td>
+                    <td><select name="area" id="area">
+                            <option value="" selected="selected"></option>
+                        </select></td>
+                </tr>
+                <tr>
+                    <td>室数</td>
+                    <td><select name="bedroom_min" id="bedroom_min">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        —
+                        <select name="bedroom_max" id="bedroom_max">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>厅数</td>
+                    <td><select name="living_room_min" id="living_room_min">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        —
+                        <select name="living_room_max" id="living_room_max">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>卫数</td>
+                    <td><select name="bathroom_min" id="bathroom_min">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        —
+                        <select name="bathroom_max" id="bathroom_max">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>楼层</td>
+                    <td><select name="floor" id="floor">
+                            <option value="" selected="selected"></option>
+                            <option value="0">高楼层</option>
+                            <option value="1">中楼层</option>
+                            <option value="2">低楼层</option>
+                            <option value="3">底层</option>
+                            <option value="4">顶层</option>
+                            <option value="5">地下室</option>
+                        </select></td>
+                </tr>
+                <tr>
+                    <td>楼龄（年）</td>
+                    <td><select name="construct_time" id="construct_time">
+                            <option value="" selected="selected"></option>
+                            <option value="0">5年以下</option>
+                            <option value="1">5-10年</option>
+                            <option value="2">10-15年</option>
+                            <option value="3">15-20年</option>
+                            <option value="4">20年以上</option>
+                        </select></td>
+                </tr>
+                <tr>
+                    <td>交易年限（年）</td>
+                    <td><select name="last_trade_time" id="last_trade_time">
+                            <option value="" selected="selected"></option>
+                            <option value="0">满五年</option>
+                            <option value="1">满两年</option>
+                            <option value="2">未满两年</option>
+                        </select></td>
+                </tr>
+                <tr>
+                    <td>面积（平方米）</td>
+                    <td><select name="outer_square_min" id="outer_square_min">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="150">150</option>
+                            <option value="200">200</option>
+                        </select>
+                        —
+                        <select name="outer_square_max" id="outer_square_max">
+                            <option value="" selected="selected"></option>
+                            <option value="0">0</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="150">150</option>
+                            <option value="200">200</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>装修情况</td>
+                    <td><select name="decorate" id="decorate">
+                            <option value="" selected="selected"></option>
+                            <option value="0">精装</option>
+                            <option value="1">简装</option>
+                            <option value="2">其他</option>
+                            <option value="3">毛坯</option>
+                        </select></td>
+                    <td width="5%">经度</td>
+                    <td width="14%"><input type="text" name="lng" id="longitude" readonly="true"></td>
+                    <td width="5%">纬度</td>
+                    <td width="14%"><input type="text" name="lat" id="latitude" readonly="true"></td>
+                    <td width="9%">距离选点</td>
+                    <td width="16%"><select name="dist" id="dist" onChange="changeClear()">
+                            <option value="" selected="selected"></option>
+                            <option value="1">1000米以内</option>
+                            <option value="2">2000米以内</option>
+                            <option value="3">3000米以内</option>
+                        </select>
+                        <script>
+                            function changeClear() {
+                                if (document.getElementById("dist").options[document.getElementById("dist").selectedIndex].value == '') {
+                                    document.getElementById("longitude").value = '';
+                                    document.getElementById("latitude").value = '';
+                                }
+                            }</script>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- <input type="submit" name="submit" id="submit" value="提交" onClick="javascript:form.action='List.html'">
+  <input type="reset" name="reset" id="reset" value="重置"> -->
+        <hr style="FILTER:alpha(opacity=100,finishopacity=0,style=1)" width="80%" color="#987cb9" size="3">
+        <p class="text-center">
+            <br><br />
+
+            <button type="reset" class="btn btn-default btn-lg" name="reset" id="reset" value="重置"
+                style="width:100px;margin-right:20px" onClick="reset_table()">重置</button>
+            <button type="button" class="btn btn-primary btn-lg" name="submit" id="submit" value="提交"
+                style="width:100px; ;" onClick="query(0, 20)">提交</button>
+            <br /><br /><br />
+            <!-- onClick="javascript:form.action='List.html'"-->
+        </p>
+    </form>
+
+    <table width="98%" align="center" id="tbMain">
+        <thead>
+            <tr>
+                <td width="26%" height="30">&nbsp;标题</td>
+                <td width="8%">&nbsp;总价</td>
+                <td width="6%">&nbsp;单价</td>
+                <td width="12%">&nbsp;据地铁站距离</td>
+                <td width="12%">&nbsp;布局</td>
+                <td width="5%">&nbsp;楼层</td>
+                <td width="7%">&nbsp;楼龄</td>
+                <td width="9%">&nbsp;交易年限</td>
+                <td width="9%">&nbsp;面积</td>
+                <td width="6%">&nbsp;装修</td>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <script>
+
+    </script>
+    <hr style="FILTER:alpha(opacity=100,finishopacity=0,style=1)" width="80%" color="#987cb9" size="3">
+    <br /><br />
+    <p class="text-center">
+
+    <div align="center">
+        <button type="button" class="btn btn-default btn-lg" name="switch1" id="switch" value="换一批"
+            style="width:100px;margin-right:20px" onClick='query(window.offset, window.limit)'>换一批</button>
+        <button type="button" class="btn btn-primary btn-lg" name="statistics" id="statistics" value="统计图表"
+            onClick="window.open('Graph.html')">统计图表</button>
+    </div>
+    </p>
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+</body>
+<script>
+    var map = new BMapGL.Map('allMap');
+    var point = new BMapGL.Point(110, 33);
+    map.centerAndZoom(point, 5);
+
+    /*<!--// 创建点标记
+    var marker = new BMapGL.Marker(point);
+    map.addOverlay(marker);
+        -->
+    // 创建信息窗口
+    var opts = {
+        width: 200,
+        height: 100,
+        title: '故宫博物院'
+    };
+    var infoWindow = new BMapGL.InfoWindow('地址：北京市东城区王府井大街88号乐天银泰百货八层', opts);
+    // 点标记添加点击事件
+    marker.addEventListener('click', function () {
+        map.openInfoWindow(infoWindow, point); // 开启信息窗口
+    });
+    */
+    map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
+    var scaleCtrl = new BMapGL.ScaleControl();  // 添加比例尺控件
+    map.addControl(scaleCtrl);
+    var zoomCtrl = new BMapGL.ZoomControl();  // 添加比例尺控件
+    map.addControl(zoomCtrl);
+
+    map.addEventListener("click", function (e) {
+        var pt = e.latlng;
+        map.centerAndZoom(pt, 15);
+        map.clearOverlays();
+        map.addOverlay(new BMapGL.Marker(pt));
+
+        document.getElementById("longitude").value = pt.lng;
+        document.getElementById("latitude").value = pt.lat;
+        document.getElementById("dist").options[1].selected = "selected";
+        //}
+        //var geoc = new BMap.Geocoder();    
+
+        //map.addEventListener("click", function(e){   
+        //通过点击百度地图，可以获取到对应的point, 由point的lng、lat属性就可以获取对应的经度纬度     
+        // var pt = e.point;
+        //将对应的HTML元素设置值
+        //  $("#site").val(site);
+        //document.getElementById("longitude").value=e.point.lng;
+        //document.getElementById("latitude").value=e.point.lat;
+        //	alert("!");
+    });
+</script>
+
+</html>
