@@ -2,6 +2,7 @@ FROM python:alpine
 
 WORKDIR /root
 
+RUN mkdir logs && mkdir temp
 
 COPY . .
 
