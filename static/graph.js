@@ -108,7 +108,7 @@ function make_data(type) {
         case 2:
             var series = [], i;
             for (i in data)
-                series.push({ name: data[i].city, value: data[i].count });
+                series.push({ name: data[i].city, value: data[i].sum });
             option = pie_chart('数量-城市分布图', series);
             break;
 
@@ -124,7 +124,7 @@ function make_data(type) {
         case 4:
             var series = [], i;
             for (i in data)
-                series.push({ name: data[i].district, value: data[i].count });
+                series.push({ name: data[i].district, value: data[i].sum });
             option = pie_chart('数量-区划分布图', series);
             break;
 
@@ -136,14 +136,77 @@ function make_data(type) {
             }
             option = bar_plot('价格-区划分布图', x, y);
             break;
+        
+        case 6:
+            var grouper = floor_by(100, 'distance')
+            var grouped = group_by(data, grouper);
+            var x = [], y = [], temp;
+
+            console.log(grouped)
+
+            for (let i in grouped) {
+                var square = 0, sum = 0;
+                for (let j in grouped[i]) {
+                    square = grouper(grouped[i][j]);
+                    sum += grouped[i][j].sum;
+                }
+                x.push(square);
+                y.push(sum);
+            }
+
+            temp = fill(x, y, 100);
+            x = temp[0];
+            y = temp[1];
+
+            option = bar_plot('数量-地铁距离分布图', x, y);
+            break;
+        
+        case 7:
+            var grouper = floor_by(100, 'distance')
+            var grouped = group_by(data, grouper);
+            var x = [], y = [], temp;
+
+            console.log(grouped)
+
+            for (let i in grouped) {
+                var square = 0, sum = 0, count = 0;
+                for (let j in grouped[i]) {
+                    square = grouper(grouped[i][j]);
+                    sum += grouped[i][j].sum;
+                    count += grouped[i][j].count;
+                }
+                x.push(square);
+                y.push(sum / count);
+            }
+
+            temp = fill(x, y, 100);
+            x = temp[0];
+            y = temp[1];
+
+            option = bar_plot('价格-地铁距离分布图', x, y);
+            break;
 
         case 8:
-            var x = [], y = [];
-            for (i in data) {
-                if (data[i].construct_time)
-                    x.push(data[i].construct_time);
-                y.push(data[i].count);
+            var grouper = floor_by(5, 'construct_time')
+            var grouped = group_by(data, grouper);
+            var x = [], y = [], temp;
+
+            console.log(grouped)
+
+            for (let i in grouped) {
+                var square = 0, sum = 0;
+                for (let j in grouped[i]) {
+                    square = grouper(grouped[i][j]);
+                    sum += grouped[i][j].sum;
+                }
+                x.push(square);
+                y.push(sum);
             }
+
+            temp = fill(x, y, 5);
+            x = temp[0];
+            y = temp[1];
+
             option = bar_plot('数量-楼龄分布图', x, y);
             break;
 
@@ -181,7 +244,7 @@ function make_data(type) {
                 var square = 0, sum = 0;
                 for (let j in grouped[i]) {
                     square = grouper(grouped[i][j]);
-                    sum += grouped[i][j].count;
+                    sum += grouped[i][j].sum;
                 }
                 x.push(square);
                 y.push(sum);
