@@ -11,6 +11,29 @@ function reset_table() {
     clear_table();
 }
 
+function model(p) {
+    var ret = {}
+    $.ajax({
+        url: "/api/regression/",
+        data: JSON.stringify(p),
+        type: "POST",
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        contentType: "application/json",
+        async: false,
+        xhrFields: { withCredentials: false },
+        crossDomain: true,
+        success: function (res) {
+            ret = res.data;
+        },
+        fail: function (err) {
+            console.log(err)
+            alert('fail');
+        }
+    });
+
+    return ret;
+}
+
 function query(offset, limit) {
     var d = new Date();
     d.setTime(d.getTime() + 24 * 60 * 60 * 1000);
@@ -58,13 +81,14 @@ function query(offset, limit) {
         crossDomain: true,
         success: function (res) {
             clear_table();
+            ids = []
+
+            for (let i in res.data)
+                ids.push(res.data[i].beike_ID)
+
+            var predicted = model(ids)
             for (i = 0; i < res.data.length; i++) {
                 var houseURL = 'https://bj.ke.com/ershoufang/' + res.data[i].beike_ID + '.html';
-                var title = res.data[i].title;
-                var totalPrice = res.data[i].anon_1;
-                var unitPrice = res.data[i].price_per_square;
-                var distance = res.data[i].distance;
-                var layout = res.data[i].bedroom + '室' + res.data[i].bathroom + '卫' + res.data[i].living_room + '厅';
                 var floor = '';
 
                 switch (res.data[i].floor_no) {
@@ -120,10 +144,9 @@ function query(offset, limit) {
                     <td>${moment(res.data[i].last_trade_time).format("YYYY年MM月DD日")}</td>
                     <td>${res.data[i].outer_square + '㎡'}</td>
                     <td>${decoration}</td>
+                    <td>${predicted[i] ? Math.round(predicted[i] / 1e2) / 1e2 + '万' : "暂无"}</td>
                 </tr>
                 `
-
-                // var row = '<tr onclick="window.open(\'' + houseURL + '\');"><td>' + title + '</td><td>' + Math.floor(totalPrice) + '</td><td>' + unitPrice + '</td><td>' + distance + '</td><td>' + layout + '</td><td>' + floor + '</td><td>' + '</td><td>' + '</td><td>' + square + '</td><td>' + decoration + '</td></tr>';
 
                 document.getElementById('tbMain').innerHTML += row;
                 document.getElementById('tbMain').hidden = false;
