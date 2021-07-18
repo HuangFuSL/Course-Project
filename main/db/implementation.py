@@ -148,6 +148,9 @@ class DataBase():
 
         ret.extend(v(criteria) for k, v in candidate.items() if criteria[k] is not None)
         ret.extend([
+            Fixed.beike_ID > 0,
+            Volatile.beike_ID > 0,
+            Fixed.construct_time > 0,
             Fixed.beike_ID == Volatile.beike_ID,
             CommunityInfo.community_name == Fixed.community_name,
             SubwayInfo.community_name == Fixed.community_name,
