@@ -106,7 +106,24 @@ function query(offset, limit) {
                         break;
                 }
 
-                var row = '<tr onclick="window.open(\'' + houseURL + '\');"><td>' + title + '</td><td>' + Math.floor(totalPrice) + '</td><td>' + unitPrice + '</td><td>' + distance + '</td><td>' + layout + '</td><td>' + floor + '</td><td>' + '</td><td>' + '</td><td>' + square + '</td><td>' + decoration + '</td></tr>';
+                var row = `
+                <tr onclick="window.open('${houseURL}');">
+                    <td>${res.data[i].title}</td>
+                    <td>${res.data[i].city}</td>
+                    <td>${res.data[i].district + '区'}</td>
+                    <td>${Math.floor(res.data[i].anon_1 / 1e4) + '万'}</td>
+                    <td>${Math.round(res.data[i].price_per_square / 1e2) / 1e2 + '万'}</td>
+                    <td>${res.data[i].distance + '米'}</td>
+                    <td>${res.data[i].bedroom + '室' + res.data[i].bathroom + '卫' + res.data[i].living_room + '厅'}</td>
+                    <td>${floor}</td>
+                    <td>${res.data[i].construct_time + '年'}</td>
+                    <td>${moment(res.data[i].last_trade_time).format("YYYY年MM月DD日")}</td>
+                    <td>${res.data[i].outer_square + '㎡'}</td>
+                    <td>${decoration}</td>
+                </tr>
+                `
+
+                // var row = '<tr onclick="window.open(\'' + houseURL + '\');"><td>' + title + '</td><td>' + Math.floor(totalPrice) + '</td><td>' + unitPrice + '</td><td>' + distance + '</td><td>' + layout + '</td><td>' + floor + '</td><td>' + '</td><td>' + '</td><td>' + square + '</td><td>' + decoration + '</td></tr>';
 
                 document.getElementById('tbMain').innerHTML += row;
                 document.getElementById('tbMain').hidden = false;

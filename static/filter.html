@@ -19,7 +19,7 @@
     <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="http://api.map.baidu.com/api?type=webgl&v=1.0&ak=PlhFWpA02aoURjAOpnWcRGqw7AI8EEyO"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="/static/filter.js"></script>
 </head>
 
@@ -242,11 +242,13 @@
     <table width="98%" align="center" id="tbMain" hidden="true">
         <thead>
             <tr>
-                <td width="26%" height="30">&nbsp;标题</td>
-                <td width="8%">&nbsp;总价</td>
-                <td width="6%">&nbsp;单价</td>
-                <td width="12%">&nbsp;据地铁站距离</td>
-                <td width="12%">&nbsp;布局</td>
+                <td width="24%" height="30">&nbsp;标题</td>
+                <td width="4%" height="30">&nbsp;市</td>
+                <td width="4%" height="30">&nbsp;区</td>
+                <td width="5%">&nbsp;总价</td>
+                <td width="5%">&nbsp;单价</td>
+                <td width="5%">&nbsp;距地铁站距离</td>
+                <td width="8%">&nbsp;布局</td>
                 <td width="5%">&nbsp;楼层</td>
                 <td width="7%">&nbsp;楼龄</td>
                 <td width="9%">&nbsp;交易年限</td>
@@ -266,7 +268,7 @@
 
     <div align="center" id="btPane" hidden="true">
         <button type="button" class="btn btn-default btn-lg" name="switch1" id="switch" value="换一批"
-            style="width:100px;margin-right:20px">换一批</button>
+            style="width:100px;margin-right:20px" onclick="query(window.offset + 20, window.limit + 20)">换一批</button>
         <button type="button" class="btn btn-primary btn-lg" name="statistics" id="statistics" value="统计图表"
             onClick="window.open('/graph.html')">统计图表</button>
         <script>
