@@ -74,10 +74,8 @@ function fill(x, y, step) {
     for (let i in x) {
         if (!i)
             continue;
-        if (x[i] - x[i - 1] > step)
-        {
-            for (let j = x[i - 1] + step; j < x[i]; j += step)
-            {
+        if (x[i] - x[i - 1] > step) {
+            for (let j = x[i - 1] + step; j < x[i]; j += step) {
                 x_ret.push(j);
                 y_ret.push(0);
             }
@@ -98,7 +96,7 @@ function make_data(type) {
             var x = [], y = [];
             for (i in data) {
                 x.push(data[i].date);
-                y.push(data[i].price)
+                y.push(data[i].sum / data[i].count)
             }
             option = {
                 xAxis: { type: 'category', data: x },
@@ -118,7 +116,7 @@ function make_data(type) {
             var x = [], y = [];
             for (i in data) {
                 x.push(data[i].city);
-                y.push(data[i].price)
+                y.push(data[i].sum / data[i].count)
             }
             option = bar_plot('价格-城市分布图', x, y);
             break;
@@ -134,7 +132,7 @@ function make_data(type) {
             var x = [], y = [];
             for (i in data) {
                 x.push(data[i].district);
-                y.push(data[i].price)
+                y.push(data[i].sum / data[i].count)
             }
             option = bar_plot('价格-区划分布图', x, y);
             break;
@@ -150,12 +148,27 @@ function make_data(type) {
             break;
 
         case 9:
-            var x = [], y = [];
-            for (i in data) {
-                if (data[i].construct_time)
-                    x.push(data[i].construct_time);
-                y.push(data[i].price);
+            var grouper = floor_by(5, 'construct_time')
+            var grouped = group_by(data, grouper);
+            var x = [], y = [], temp;
+
+            console.log(grouped)
+
+            for (let i in grouped) {
+                var square = 0, sum = 0, count = 0;
+                for (let j in grouped[i]) {
+                    square = grouper(grouped[i][j]);
+                    sum += grouped[i][j].sum;
+                    count += grouped[i][j].count;
+                }
+                x.push(square);
+                y.push(sum / count);
             }
+
+            temp = fill(x, y, 5);
+            x = temp[0];
+            y = temp[1];
+
             option = bar_plot('价格-楼龄分布图', x, y);
             break;
 
@@ -181,6 +194,31 @@ function make_data(type) {
             option = bar_plot('数量-面积分布图', x, y);
             break;
 
+        case 11:
+            var grouper = floor_by(10, 'outer_square')
+            var grouped = group_by(data, grouper);
+            var x = [], y = [], temp;
+
+            for (let i in grouped) {
+                var square = 0, sum = 0, count = 0;
+                for (let j in grouped[i]) {
+                    square = grouper(grouped[i][j]);
+                    sum += grouped[i][j].sum;
+                    count += grouped[i][j].count;
+                }
+                x.push(square);
+                y.push(sum / count);
+            }
+
+            temp = fill(x, y, 10);
+            x = temp[0];
+            y = temp[1];
+
+            option = bar_plot('价格-面积分布图', x, y);
+            break;
+        
+        case 12:
+            
     }
 
     return option;
