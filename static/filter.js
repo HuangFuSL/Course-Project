@@ -28,6 +28,12 @@ function query(offset, limit) {
         }
     }
 
+
+    if (allInfo.city === undefined) {
+        alert("请输入城市");
+        return;
+    }
+
     var requestBody = {};
     if (offset === undefined)
         window.offset = 0;
@@ -59,8 +65,7 @@ function query(offset, limit) {
                 var layout = res.data[i].bedroom + '室' + res.data[i].bathroom + '卫' + res.data[i].living_room + '厅';
                 var floor = '';
 
-                switch (res.data[i].floor_no)
-                {
+                switch (res.data[i].floor_no) {
                     case 0:
                         floor = "高楼层";
                         break;
@@ -112,3 +117,80 @@ function query(offset, limit) {
         }
     });
 }
+
+function setCity() {
+    window.map = new BMapGL.Map('allMap');
+    window.map.centerAndZoom(new BMapGL.Point(110, 33), 5);
+
+    window.map.enableScrollWheelZoom(true);
+    window.map.addControl(new BMapGL.ScaleControl());
+    window.map.addControl(new BMapGL.ZoomControl());
+
+    window.map.addEventListener("click", function (e) {
+        var pt = e.latlng;
+        window.map.centerAndZoom(pt, 15);
+        window.map.clearOverlays();
+        window.map.addOverlay(new BMapGL.Marker(pt));
+
+        document.getElementById("longitude").value = pt.lng;
+        document.getElementById("latitude").value = pt.lat;
+        document.getElementById("dist").options[1].selected = "selected";
+    });
+
+    window.arrBJ = new Array('', '东城', '西城', '朝阳', '丰台', '石景山', '海淀', '门头沟', '房山', '通州', '顺义', '昌平', '大兴', '怀柔', '平谷', '密云', '延庆');
+    window.arrSH = new Array('', '黄浦', '徐汇', '长宁', '静安', '普陀', '虹口', '杨浦', '闵行', '宝山', '嘉定', '浦东新', '金山', '松江', '青浦', '奉贤', '崇明');
+    window.arrGZ = new Array('', '荔湾', '越秀', '海珠', '天河', '白云', '黄埔', '番禺', '花都', '南沙', '从化', '增城');
+    window.arrSZ = new Array('', '罗湖', '福田', '南山', '宝安', '龙岗', '盐田', '龙华', '坪山', '光明');
+    window.arrAll = new Array('', window.arrBJ, window.arrSH, window.arrGZ, window.arrSZ);
+}
+
+function setArea() {
+    var cityNum = parseInt(document.getElementById("city").selectedIndex, 10);
+    document.getElementById("area").length = 0;
+    if (cityNum) {
+        var i = 0;
+        for (i = 0; i < window.arrAll[cityNum].length; i++) {
+            var tempOp = document.createElement('option');
+            tempOp.value = window.arrAll[cityNum][i];
+            tempOp.text = window.arrAll[cityNum][i];
+            if (i == 0) {
+                tempOp.selected = "true";
+            }
+            document.getElementById("area").appendChild(tempOp);
+        }
+    }
+
+    switch (cityNum) {
+        case 0: {
+            var tempPt = new BMapGL.Point(110, 33);
+            window.map.centerAndZoom(tempPt, 5);
+            document.body.style.backgroundImage = "url('/img/background.png')";
+            break;
+        }
+        case 1: {
+            var tempPt = new BMapGL.Point(116.40351686607113, 39.923722008555245);
+            window.map.centerAndZoom(tempPt, 12);
+            document.body.style.backgroundImage = "url('/img/beijing.png')";
+            break;
+        }
+        case 2: {
+            var tempPt = new BMapGL.Point(121.48020807481275, 31.235898502979378);
+            window.map.centerAndZoom(tempPt, 12);
+            document.body.style.backgroundImage = "url('/img/shanghai.png')";
+            break;
+        }
+        case 3: {
+            var tempPt = new BMapGL.Point(113.27173638634481, 23.138748561907633);
+            window.map.centerAndZoom(tempPt, 12);
+            document.body.style.backgroundImage = "url('/img/guangzhou.png')";
+            break;
+        }
+        case 4: {
+            var tempPt = new BMapGL.Point(114.06554649534966, 22.571939198177372);
+            window.map.centerAndZoom(tempPt, 12);
+            document.body.style.backgroundImage = "url('/img/shenzhen.png')";
+            break;
+        }
+    }
+}
+

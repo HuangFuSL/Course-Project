@@ -6,7 +6,7 @@
     <title>Filter</title>
     <style>
         body {
-            background-image: url(img/素材库/background.png);
+            background-image: url(/img/background.png);
             background-attachment: scroll;
             background-repeat: no-repeat;
             background-position: bottom;
@@ -23,10 +23,10 @@
     <script src="/static/filter.js"></script>
 </head>
 
-<body style="background-color:#F5F5F5;">
+<body style="background-color:#F5F5F5;" onload="setCity()">
     <div class="jumbotron jumbotron-fluid" style="background-color: #51517f;">
         <div class="container">
-            <h1 style="color: #F5F5F5; font-size: 31px"><a href="/index.html"><img src="img/素材库/home-transparent.png"
+            <h1 style="color: #F5F5F5; font-size: 31px"><a href="/index.html"><img src="/img/home-transparent.png"
                         width="50" height="45.8" alt=""></a> 房地产信息统计系统&nbsp;</h1>
 
             <h2 style="color: #F5F5F5; font-size: 24px">
@@ -49,7 +49,7 @@
 
                 <tr>
                     <td>城市</td>
-                    <td><select name="city" id="city" onChange="changeCity()">
+                    <td><select name="city" id="city" onChange="setArea()">
                             <option value="" selected="selected"></option>
                             <option value="北京">北京</option>
                             <option value="上海">上海</option>
@@ -279,110 +279,5 @@
     </p>
     <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
 </body>
-<script>
-    var map = new BMapGL.Map('allMap');
-    var point = new BMapGL.Point(110, 33);
-    map.centerAndZoom(point, 5);
-
-    /*<!--// 创建点标记
-    var marker = new BMapGL.Marker(point);
-    map.addOverlay(marker);
-        -->
-    // 创建信息窗口
-    var opts = {
-        width: 200,
-        height: 100,
-        title: '故宫博物院'
-    };
-    var infoWindow = new BMapGL.InfoWindow('地址：北京市东城区王府井大街88号乐天银泰百货八层', opts);
-    // 点标记添加点击事件
-    marker.addEventListener('click', function () {
-        map.openInfoWindow(infoWindow, point); // 开启信息窗口
-    });
-    */
-    map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
-    var scaleCtrl = new BMapGL.ScaleControl();  // 添加比例尺控件
-    map.addControl(scaleCtrl);
-    var zoomCtrl = new BMapGL.ZoomControl();  // 添加比例尺控件
-    map.addControl(zoomCtrl);
-
-    map.addEventListener("click", function (e) {
-        var pt = e.latlng;
-        map.centerAndZoom(pt, 15);
-        map.clearOverlays();
-        map.addOverlay(new BMapGL.Marker(pt));
-
-        document.getElementById("longitude").value = pt.lng;
-        document.getElementById("latitude").value = pt.lat;
-        document.getElementById("dist").options[1].selected = "selected";
-        //}
-        //var geoc = new BMap.Geocoder();    
-
-        //map.addEventListener("click", function(e){   
-        //通过点击百度地图，可以获取到对应的point, 由point的lng、lat属性就可以获取对应的经度纬度     
-        // var pt = e.point;
-        //将对应的HTML元素设置值
-        //  $("#site").val(site);
-        //document.getElementById("longitude").value=e.point.lng;
-        //document.getElementById("latitude").value=e.point.lat;
-        //	alert("!");
-    });
-
-    var arrBJ = new Array('', '东城区', '西城区', '朝阳区', '丰台区', '石景山区', '海淀区', '门头沟区', '房山区', '通州区', '顺义区', '昌平区', '大兴区', '怀柔区', '平谷区', '密云区', '延庆区');
-    var arrSH = new Array('', '黄浦区', '徐汇区', '长宁区', '静安区', '普陀区', '虹口区', '杨浦区', '闵行区', '宝山区', '嘉定区', '浦东新区', '金山区', '松江区', '青浦区', '奉贤区', '崇明区');
-    var arrGZ = new Array('', '荔湾区', '越秀区', '海珠区', '天河区', '白云区', '黄埔区', '番禺区', '花都区', '南沙区', '从化区', '增城区');
-    var arrSZ = new Array('', '罗湖区', '福田区', '南山区', '宝安区', '龙岗区', '盐田区', '龙华区', '坪山区', '光明区');
-    var arrAll = new Array('', arrBJ, arrSH, arrGZ, arrSZ);
-
-    function setArea() {
-        var cityNum = document.getElementById("city").selectedIndex;
-        document.getElementById("area").length = 0;
-        if (cityNum != '0') {
-            var i = 0;
-            for (i = 0; i < arrAll[cityNum].length; i++) {
-                var tempOp = document.createElement('option');
-                tempOp.value = arrAll[cityNum][i];
-                tempOp.text = arrAll[cityNum][i];
-                if (i == 0) {
-                    tempOp.selected = "true";
-                }
-                document.getElementById("area").appendChild(tempOp);
-            }
-        }
-
-        switch (cityNum) {
-            case 0: {
-                var tempPt = new BMapGL.Point(110, 33);
-                map.centerAndZoom(tempPt, 5);
-                document.body.style.backgroundImage = "url('img/素材库/background.png')";
-                break;
-            }
-            case 1: {
-                var tempPt = new BMapGL.Point(116.40351686607113, 39.923722008555245);
-                map.centerAndZoom(tempPt, 12);
-                document.body.style.backgroundImage = "url('img/素材库/beijing.png')";
-                break;
-            }
-            case 2: {
-                var tempPt = new BMapGL.Point(121.48020807481275, 31.235898502979378);
-                map.centerAndZoom(tempPt, 12);
-                document.body.style.backgroundImage = "url('img/素材库/shanghai.png')";
-                break;
-            }
-            case 3: {
-                var tempPt = new BMapGL.Point(113.27173638634481, 23.138748561907633);
-                map.centerAndZoom(tempPt, 12);
-                document.body.style.backgroundImage = "url('img/素材库/guangzhou.png')";
-                break;
-            }
-            case 4: {
-                var tempPt = new BMapGL.Point(114.06554649534966, 22.571939198177372);
-                map.centerAndZoom(tempPt, 12);
-                document.body.style.backgroundImage = "url('img/素材库/shenzhen.png')";
-                break;
-            }
-        }
-    }
-</script>
 
 </html>
