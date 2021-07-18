@@ -186,23 +186,25 @@ class DataBase():
     async def get_graph_data(self,
         grouper,
         aggregator: str,
-        aggregator_label: str,
+        *args,
         **criteria: Any
     ):
         if self._engine is None:
             raise NotImplementedError
 
         if aggregator == 'avg':
-            aggregate_val = func.sum(Volatile.price_per_square) / \
-                func.count(Volatile.price_per_square)
+            aggregate_val = [
+                func.sum(Volatile.price_per_square).label('sum'),
+                func.count(Volatile.price_per_square).label('count')
+            ]
         elif aggregator == 'count':
-            aggregate_val = func.count(grouper)
+            aggregate_val = [func.count(grouper).label('sum')]
         else:
             raise ValueError("Aggregator should be 'avg' or 'count'.")
         
         async with self._engine.connect() as c:
             cursor = await c.execute(
-                select([grouper, aggregate_val.label(aggregator_label)]).
+                select([grouper, *aggregate_val]).
                 where(self.build_criteria(criteria)). \
                 group_by(grouper)
             )
