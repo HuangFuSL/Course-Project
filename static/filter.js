@@ -34,6 +34,8 @@ function query(offset, limit) {
         return;
     }
 
+    sessionStorage.setItem('criteria', JSON.stringify(allInfo));
+
     var requestBody = {};
     if (offset === undefined)
         window.offset = 0;
