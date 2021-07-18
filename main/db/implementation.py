@@ -83,7 +83,11 @@ class DataBase():
             return cursor.fetchall()
 
     def build_criteria(self, criteria: Dict[str, Any]):
-        ret = []
+        ret = [
+            Volatile.date == select([func.max(Volatile.date)]). \
+                group_by(Volatile.date).                        \
+                scalar_subquery()
+        ]
         candidate = {
             'city': lambda _: Fixed.city == _['city'],
             'area': lambda _: CommunityInfo.district == _['area'],
@@ -101,7 +105,7 @@ class DataBase():
             'decoration': lambda _: Fixed.property_right == _['decoration'],
         }
 
-        if criteria['location'] is not None:
+        if criteria.get('location', None) is not None:
             lat1, lat2 = calc_lat_range(**criteria['location'])
             lng1, lng2 = calc_lng_range(**criteria['location'])
 
@@ -122,7 +126,7 @@ class DataBase():
                 lng
             ])
 
-        if criteria['last_trade_time']:
+        if criteria.get('last_trade_time', None) is not None:
             trade_time_candidate = [
                 # '满五年': 0,
                 # '满两年': 1,
@@ -136,7 +140,7 @@ class DataBase():
             ]
             ret.append(trade_time_candidate[criteria['last_trade_time']])
         
-        if criteria['construct_time'] is not None:
+        if criteria.get('construct_time', None) is not None:
             construct_time_candidate = [
                 and_(
                     Fixed.construct_time <= get_years_ago(_).year,
@@ -146,7 +150,7 @@ class DataBase():
             ]
             ret.extend(construct_time_candidate[criteria['construct_time']])
 
-        ret.extend(v(criteria) for k, v in candidate.items() if criteria[k] is not None)
+        ret.extend(v(criteria) for k, v in candidate.items() if criteria.get(k, None) is not None)
         ret.extend([
             Fixed.beike_ID > 0,
             Volatile.beike_ID > 0,
@@ -168,6 +172,9 @@ class DataBase():
         async with self._engine.connect() as c:
             cursor = await c.execute(select([
                 Fixed.beike_ID,
+                Fixed.city,
+                CommunityInfo.district,
+                CommunityInfo.street,
                 Volatile.title,
                 Volatile.price_per_square * Fixed.outer_square,
                 Fixed.outer_square,
@@ -177,14 +184,49 @@ class DataBase():
                 Fixed.living_room,
                 Fixed.bathroom,
                 Fixed.floor_no,
-                Fixed.listing_time,
+                Fixed.construct_time,
                 Fixed.last_trade_time,
                 Fixed.decoration
             ]).where(self.build_criteria(retrieval_dict)).offset(offset).limit(limit))
             return cursor.fetchall()
 
     async def get_regression_data(self):
-        pass
+        if self._engine is None:
+            raise NotImplementedError
+
+        async with self._engine.connect() as c:
+            cursor = await c.execute(select([
+                Fixed.beike_ID,
+                Volatile.price_per_square,
+                Fixed.construct_time,
+                CommunityInfo.district.label('area'),
+                CommunityInfo.street,
+                Fixed.community_name,
+                Fixed.outer_square,
+                Fixed.structure,
+                Fixed.construction_type,
+                Fixed.direction,
+                Fixed.construction_struct,
+                Fixed.decoration,
+                Fixed.elevator_ratio,
+                Fixed.heating,
+                Fixed.whether_elevator,
+                Fixed.trade_property_right,
+                Fixed.mortgage_info,
+                Fixed.bedroom,
+                Fixed.living_room,
+                Fixed.bathroom,
+                Fixed.floor_no
+            ]).where(self.build_criteria({})))
+            return cursor.mappings().fetchall()
+
+    async def get_subway_data(self):
+        if self._engine is None:
+            raise NotImplementedError
+
+        async with self._engine.connect() as c:
+            cursor = await c.execute(select([SubwayInfo]))
+            return cursor.mappings().fetchall()
 
     async def get_graph_data(self,
         grouper,
@@ -213,16 +255,6 @@ class DataBase():
             )
             return cursor.fetchall()
 
-
-    async def get_distribution(self, retrieval_dict: Dict[str, Any]):
-        if self._engine is None:
-            raise NotImplementedError
-        async with self._engine.connect() as c:
-            cursor = await c.execute(select([
-                CommunityInfo.lng,
-                CommunityInfo.lat
-            ]).where(self.build_criteria(retrieval_dict)))
-            return cursor.fetchall()
 
     async def query_cities(self):
         if self._engine is None:

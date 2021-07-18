@@ -1,5 +1,7 @@
+from main.model import ModelResult
 from ..db import *
 from .model import *
+from .utils import wrap_response
 
 async def heat_map_1():
     data = await DataBase().get_heatmap_data_1()
@@ -9,11 +11,7 @@ async def heat_map_1():
     [{"count": 6, "lng": 116.612326, "lat": 39.92220205},
     {"count": 22, "lng": 116.3307066, "lat": 40.07476902}]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def heat_map_2():
     data = await DataBase().get_heatmap_data_2()
@@ -23,11 +21,7 @@ async def heat_map_2():
     [{"count": 6, "lng": 116.612326, "lat": 39.92220205},
     {"count": 22, "lng": 116.3307066, "lat": 40.07476902}]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 def parse_retrieval_arg(item: Retrieval):
     ret = vars(item)
@@ -57,11 +51,7 @@ async def retrieval(item: Request):
       <td align="center">精装</td>
     </tr>
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_1(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -75,11 +65,7 @@ async def graph_1(item: Retrieval):
     ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']           日期
     [150, 230, 224, 218, 135, 147, 260]                         日期对应的均价 
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_2(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -96,11 +82,7 @@ async def graph_2(item: Retrieval):
                 {value: 28, name: 'city 3'}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_3(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -117,11 +99,7 @@ async def graph_3(item: Retrieval):
                 {value: 28, name: 'city 3'}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 
 async def graph_4(item: Retrieval):
@@ -139,11 +117,7 @@ async def graph_4(item: Retrieval):
                 {value: 28, name: '西城区'}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_5(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -160,11 +134,7 @@ async def graph_5(item: Retrieval):
                 {value: 28, name: '西城区'}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_6(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -182,11 +152,7 @@ async def graph_6(item: Retrieval):
                 {value: 21}   距离地铁站距离在1200米以上的房屋的数量
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_7(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -204,11 +170,7 @@ async def graph_7(item: Retrieval):
                 {value: 21}   距离地铁站距离在1200米以上的房屋的均价
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_8(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -225,11 +187,7 @@ async def graph_8(item: Retrieval):
                 {value: 28, age: 37}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_9(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -246,11 +204,7 @@ async def graph_9(item: Retrieval):
                 {value: 28, age: 37}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_10(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -267,11 +221,7 @@ async def graph_10(item: Retrieval):
                 {value: 28, area: 37}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
 async def graph_11(item: Retrieval):
     data = await DataBase().get_graph_data(
@@ -288,11 +238,8 @@ async def graph_11(item: Retrieval):
                 {value: 28, area: 37}
     ]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
+
 
 async def graph_12(item: Retrieval):
     data = await DataBase().get_distribution(parse_retrieval_arg(item))
@@ -302,18 +249,8 @@ async def graph_12(item: Retrieval):
     [{"lng": 116.612326, "lat": 39.92220205},
      {"lng": 116.3307066, "lat": 40.07476902}]
     """
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+    return wrap_response(data)
 
-async def regression_model(item: Regression_model):
-    retrieval_dict = vars(item)
-    data = await DataBase().get_retrieval_data(retrieval_dict)
-    return {
-        'code': 0,
-        'msg': '',
-        'data': data
-    }
+async def regression_model(param: List[int]):
+    return wrap_response(await ModelResult().run(param))
 
