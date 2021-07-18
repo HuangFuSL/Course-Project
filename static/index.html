@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript"
+        src="http://api.map.baidu.com/api?v=2.0&ak=PlhFWpA02aoURjAOpnWcRGqw7AI8EEyO"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
+    <script language="javascript" type="text/javascript" src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    <script src="/static/heatmap.js"></script>
+    <style type="text/css">
+        .button {
+            padding: 6px 20px;
+            font: bold 15px Verdana, Helvetica, Arial, "sans-serif";
+            text-align: center;
+            background-color: #FBFBFB;
+            color: #757598;
+            border: 1px medium #757598;
+            border-radius: 8px;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+
+        .button:hover {
+            color: #5B25A2;
+            background-color: #ebebeb;
+        }
+
+        ul,
+        li {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%
+        }
+
+        body {
+            height: 83%;
+            margin-right: 10px;
+            margin-left: 10px;
+            margin-bottom: 0px;
+            padding-right: 0px;
+            padding-bottom: 0px;
+            padding-left: 0px;
+            overflow-y: auto;
+        }
+
+        #container {
+            height: 100%;
+            width: 82%;
+            float: left;
+            border-right: 2px solid #bcbcbc;
+        }
+
+        #r-result {
+            height: 100%;
+            width: 20%;
+            float: left;
+        }
+
+        .btn-container {
+            margin: 20px;
+        }
+
+        fieldset {
+            border: 1px solid;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        fieldset label {
+            font-size: 14px;
+            line-height: 30px;
+        }
+
+        .btn {
+            color: #333;
+            background-color: #fff;
+            display: inline-block;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: normal;
+            line-height: 1.428571429;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .btn:hover {
+            color: #333;
+            background-color: #ebebeb;
+            border-color: #adadad;
+        }
+
+        .text-primary {
+            font-weight: bold;
+        }
+
+        textarea {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        textarea:focus {
+            border-color: #66afe9;
+            outline: 0;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+        }
+
+        .color-list li {
+            font-size: 14px;
+            line-height: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        h2 {
+            font-size: 18px;
+        }
+
+        h3 {
+            font-size: 16px;
+        }
+
+        h4 {
+            font-size: 14px;
+        }
+
+        h5 {
+            font-size: 12px;
+        }
+
+        h6 {
+            font-size: 10px;
+        }
+    </style>
+    <title>HomePage</title>
+</head>
+
+<body style="background-color:#F5F5F5;">
+    <em><strong></strong></em>
+
+    <div class="jumbotron jumbotron-fluid" height:30px style="background-color: #51517f;">
+        <div class="container">
+            <h1 style="color: #F5F5F5; font-size: 31px"><a href="/index.html"><img src="img/素材库/home-transparent.png"
+                        width="50" height="45.8" alt=""></a> 房地产信息统计系统&nbsp;</h1>
+        </div>
+    </div>
+
+    <div align="right">
+        <input type="button" class="button" name="filter" id="filter" value="数据筛选分析"
+            onClick="location.href='Filter.html'">
+    </div>
+
+    <div id="container"> </div>
+    <fieldset>
+        <legend>热力图设置区域</legend>
+        <p>
+            <label onclick="refresh_heatmap(1)">
+                <input type="radio" name="统计选项" value="单选" id="统计选项_0" checked />
+                房屋数量热力图</label>
+            <br>
+            <label onclick="refresh_heatmap(2)">
+                <input type="radio" name="统计选项" value="单选" id="统计选项_1" />
+                房屋价格热力图</label>
+            <br>
+        </p>
+        <input type="checkbox" onclick="toggle();" checked="checked" />
+        <span style="font-size:14px;">显示热力图</span>
+        <br><br>
+    </fieldset>
+
+    <script type="text/javascript">initialize_map(1)</script>
+</body>
+
+</html>
