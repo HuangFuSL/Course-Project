@@ -290,14 +290,3 @@ class DataBase():
             await c.execute(insert(CommunityInfo, values=other).prefix_with("OR IGNORE"))
             await c.execute(insert(SubwayInfo, values=subway).prefix_with("OR IGNORE"))
             await c.commit()
-
-    async def execute(self, command: str):
-        if self._engine is None:
-            raise NotImplementedError
-
-        async with self._engine.connect() as c:
-            cursor = await c.execute(text(command))
-            try:
-                return cursor.fetchall()
-            except:
-                await c.commit()
