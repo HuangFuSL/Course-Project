@@ -85,10 +85,17 @@ function query(offset, limit) {
 
             for (let i in res.data)
                 ids.push(res.data[i].beike_ID)
+            
+            var citycode = {
+                '北京': 'bj',
+                '上海': 'sh',
+                '广州': 'gz',
+                '深圳': 'sz'
+            }
 
             var predicted = model(ids)
             for (i = 0; i < res.data.length; i++) {
-                var houseURL = 'https://bj.ke.com/ershoufang/' + res.data[i].beike_ID + '.html';
+                var houseURL = `https://${citycode[res.data[i].city]}.ke.com/ershoufang/${res.data[i].beike_ID}.html`;
                 var floor = '';
 
                 switch (res.data[i].floor_no) {
