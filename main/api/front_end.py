@@ -56,7 +56,7 @@ async def retrieval(item: Request):
 async def graph_1(item: Retrieval):
     data = await DataBase().get_graph_data(
         Volatile.date,
-        'avg', 'price',
+        'avg', 'price', restrict_time=False,
         **parse_retrieval_arg(item)
     )
     """

@@ -82,12 +82,12 @@ class DataBase():
             )).group_by(CommunityInfo.lng, CommunityInfo.lat))
             return cursor.fetchall()
 
-    def build_criteria(self, criteria: Dict[str, Any]):
+    def build_criteria(self, criteria: Dict[str, Any], restrict_time: bool = True):
         ret = [
             Volatile.date == select([func.max(Volatile.date)]). \
                 group_by(Volatile.date).                        \
                 scalar_subquery()
-        ]
+        ] if restrict_time else False
         candidate = {
             'city': lambda _: Fixed.city == _['city'],
             'area': lambda _: CommunityInfo.district == _['area'],
@@ -232,6 +232,7 @@ class DataBase():
         grouper,
         aggregator: str,
         *args,
+        restrict_time: bool = True,
         **criteria: Any
     ):
         if self._engine is None:
@@ -250,7 +251,7 @@ class DataBase():
         async with self._engine.connect() as c:
             cursor = await c.execute(
                 select([grouper, *aggregate_val]).
-                where(self.build_criteria(criteria)). \
+                where(self.build_criteria(criteria, restrict_time)).
                 group_by(grouper)
             )
             return cursor.fetchall()
