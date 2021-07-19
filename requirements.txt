@@ -4,5 +4,7 @@ fastapi
 sqlalchemy
 aiosqlite
 xpinyin
+Cython
+numpy
 pandas
-sklearn
+scikit-learn==0.23.2
