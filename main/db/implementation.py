@@ -156,7 +156,6 @@ class DataBase():
             Volatile.beike_ID > 0,
             Fixed.construct_time > 0,
             Fixed.beike_ID == Volatile.beike_ID,
-            CommunityInfo.city == Fixed.city,
             CommunityInfo.community_name == Fixed.community_name,
             SubwayInfo.community_name == Fixed.community_name,
         ])
